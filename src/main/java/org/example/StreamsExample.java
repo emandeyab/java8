@@ -4,6 +4,10 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.function.ToIntFunction;
+
 public class StreamsExample {
 
     public static void main(final String[] args) {
@@ -29,27 +33,97 @@ public class StreamsExample {
 
         banner("Active authors");
         // TODO With functional interfaces declared
+        Predicate<Author> activeAuthors = new Predicate<Author>() {
+            @Override
+            public boolean test(Author author) {
+                return author.active;
+            }
+        };
+        authors
+                .stream()
+                .filter(activeAuthors)
+                        .forEach(authorPrintConsumer);
 
         banner("Active authors - lambda");
         // TODO With functional interfaces used directly
+        authors
+                .stream()
+                        .filter(author -> author.active)
+                                .forEach(System.out::println);
 
         banner("Active books for all authors");
         // TODO With functional interfaces declared
+        Predicate<Author> activeBooks = new Predicate<Author>() {
+            @Override
+            public boolean test(Author author) {
+                return author.books.stream().anyMatch(book -> book.published);
+            }
+        };
+        authors
+                .stream()
+                        .filter(activeBooks)
+                                .forEach(authorPrintConsumer);
 
         banner("Active books for all authors - lambda");
         // TODO With functional interfaces used directly
+        authors
+                .stream()
+                        .filter(author -> author.books.stream().anyMatch(book -> book.published))
+                                .forEach(System.out::println);
 
         banner("Average price for all books in the library");
         // TODO With functional interfaces declared
+        Function<Author, List<Book>> functionAvg = new Function<Author, List<Book>>() {
+            @Override
+            public List<Book> apply(Author author) {
+                return author.books;
+            }
+        };
+        ToIntFunction<Book> bookPrice = new ToIntFunction<Book>() {
+            @Override
+            public int applyAsInt(Book value) {
+                return value.price;
+            }
+        };
+        double avgBooks = authors
+                .stream()
+                        .map(functionAvg)
+                                .flatMap(List::stream)
+                                        .mapToInt(bookPrice)
+                                                .average()
+                                                        .orElse(0.0);
+        System.out.println("Average price: " + avgBooks);
 
         banner("Average price for all books in the library - lambda");
         // TODO With functional interfaces used directly
+        double avgBooks2 = authors
+                .stream()
+                        .flatMap(author -> author.books.stream())
+                                .mapToInt(book -> book.price)
+                                        .average()
+                                                .orElse(0.0);
+        System.out.println("Average price: " + avgBooks2);
 
         banner("Active authors that have at least one published book");
         // TODO With functional interfaces declared
+        Predicate<Author> activeAuthorsBooks = new Predicate<Author>() {
+            @Override
+            public boolean test(Author author) {
+                return author.active && author.books.stream().anyMatch(book -> book.published);
+            }
+        };
+        authors
+                .stream()
+                        .filter(activeAuthorsBooks)
+                                .forEach(authorPrintConsumer);
 
         banner("Active authors that have at least one published book - lambda");
         // TODO With functional interfaces used directly
+        authors
+                .stream()
+                .filter(author -> author.active &&
+                        author.books.stream().anyMatch(book -> book.published))
+                .forEach(System.out::println);
 
     }
 
